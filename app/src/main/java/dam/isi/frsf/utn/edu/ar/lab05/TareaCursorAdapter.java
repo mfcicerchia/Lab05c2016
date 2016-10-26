@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,17 +27,18 @@ public class TareaCursorAdapter extends CursorAdapter {
     private LayoutInflater inflador;
     private ProyectoDAO myDao;
     private Context contexto;
-    public TareaCursorAdapter (Context contexto, Cursor c, ProyectoDAO dao) {
+
+    public TareaCursorAdapter(Context contexto, Cursor c, ProyectoDAO dao) {
         super(contexto, c, false);
-        myDao= dao;
+        myDao = dao;
         this.contexto = contexto;
     }
 
     @Override
-        public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
+    public View newView(Context context, Cursor cursor, ViewGroup viewGroup) {
         inflador = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View vista = inflador.inflate(R.layout.fila_tarea,viewGroup,false);
+        View vista = inflador.inflate(R.layout.fila_tarea, viewGroup, false);
         return vista;
     }
 
@@ -45,36 +48,36 @@ public class TareaCursorAdapter extends CursorAdapter {
         int pos = cursor.getPosition();
 
         // Referencias UI.
-        TextView nombre= (TextView) view.findViewById(R.id.tareaTitulo);
-        TextView tiempoAsignado= (TextView) view.findViewById(R.id.tareaMinutosAsignados);
-        TextView tiempoTrabajado= (TextView) view.findViewById(R.id.tareaMinutosTrabajados);
-        TextView prioridad= (TextView) view.findViewById(R.id.tareaPrioridad);
-        TextView responsable= (TextView) view.findViewById(R.id.tareaResponsable);
-        CheckBox finalizada = (CheckBox)  view.findViewById(R.id.tareaFinalizada);
+        TextView nombre = (TextView) view.findViewById(R.id.tareaTitulo);
+        TextView tiempoAsignado = (TextView) view.findViewById(R.id.tareaMinutosAsignados);
+        TextView tiempoTrabajado = (TextView) view.findViewById(R.id.tareaMinutosTrabajados);
+        TextView prioridad = (TextView) view.findViewById(R.id.tareaPrioridad);
+        TextView responsable = (TextView) view.findViewById(R.id.tareaResponsable);
+        CheckBox finalizada = (CheckBox) view.findViewById(R.id.tareaFinalizada);
 
-        final Button btnFinalizar = (Button)   view.findViewById(R.id.tareaBtnFinalizada);
-        final Button btnEditar = (Button)   view.findViewById(R.id.tareaBtnEditarDatos);
+        final Button btnFinalizar = (Button) view.findViewById(R.id.tareaBtnFinalizada);
+        final Button btnEditar = (Button) view.findViewById(R.id.tareaBtnEditarDatos);
         ToggleButton btnEstado = (ToggleButton) view.findViewById(R.id.tareaBtnTrabajando);
 
         nombre.setText(cursor.getString(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.TAREA)));
         Integer horasAsigandas = cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS));
-        tiempoAsignado.setText(horasAsigandas*60 + " minutos");
+        tiempoAsignado.setText(horasAsigandas * 60 + " minutos");
 
         Integer minutosAsigandos = cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.MINUTOS_TRABAJADOS));
-        tiempoTrabajado.setText(minutosAsigandos+ " minutos");
+        tiempoTrabajado.setText(minutosAsigandos + " minutos");
         String p = cursor.getString(cursor.getColumnIndex(ProyectoDBMetadata.TablaPrioridadMetadata.PRIORIDAD_ALIAS));
         prioridad.setText(p);
         responsable.setText(cursor.getString(cursor.getColumnIndex(ProyectoDBMetadata.TablaUsuariosMetadata.USUARIO_ALIAS)));
-        finalizada.setChecked(cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA))==1);
+        finalizada.setChecked(cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA)) == 1);
         finalizada.setTextIsSelectable(false);
 
         btnEditar.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
         btnEditar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Integer idTarea= (Integer) view.getTag();
-                Intent intEditarAct = new Intent(contexto,AltaTareaActivity.class);
-                intEditarAct.putExtra("ID_TAREA",idTarea);
+                final Integer idTarea = (Integer) view.getTag();
+                Intent intEditarAct = new Intent(contexto, AltaTareaActivity.class);
+                intEditarAct.putExtra("ID_TAREA", idTarea);
                 context.startActivity(intEditarAct);
 
             }
@@ -84,17 +87,24 @@ public class TareaCursorAdapter extends CursorAdapter {
         btnFinalizar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Integer idTarea= (Integer) view.getTag();
+                final Integer idTarea = (Integer) view.getTag();
                 Thread backGroundUpdate = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d("LAB05-MAIN","finalizar tarea : --- "+idTarea);
+                        Log.d("LAB05-MAIN", "finalizar tarea : --- " + idTarea);
                         myDao.finalizar(idTarea);
+                        handlerRefresh.sendEmptyMessage(1);
                     }
                 });
                 backGroundUpdate.start();
             }
         });
     }
-}
 
+    Handler handlerRefresh = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message inputMessage) {
+            TareaCursorAdapter.this.changeCursor(myDao.listaTareas(1));
+        }
+    };
+}
