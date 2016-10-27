@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.icu.text.DateFormat;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -27,6 +28,8 @@ public class TareaCursorAdapter extends CursorAdapter {
     private LayoutInflater inflador;
     private ProyectoDAO myDao;
     private Context contexto;
+    private long startTime;
+    private Integer taskId;
 
     public TareaCursorAdapter(Context contexto, Cursor c, ProyectoDAO dao) {
         super(contexto, c, false);
@@ -44,10 +47,10 @@ public class TareaCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, final Context context, final Cursor cursor) {
-        //obtener la posicion de la fila actual y asignarla a los botones y checkboxes
+        /**obtener la posicion de la fila actual y asignarla a los botones y checkboxes*/
         int pos = cursor.getPosition();
 
-        // Referencias UI.
+        /** Referencias UI.*/
         TextView nombre = (TextView) view.findViewById(R.id.tareaTitulo);
         TextView tiempoAsignado = (TextView) view.findViewById(R.id.tareaMinutosAsignados);
         TextView tiempoTrabajado = (TextView) view.findViewById(R.id.tareaMinutosTrabajados);
@@ -57,7 +60,7 @@ public class TareaCursorAdapter extends CursorAdapter {
 
         final Button btnFinalizar = (Button) view.findViewById(R.id.tareaBtnFinalizada);
         final Button btnEditar = (Button) view.findViewById(R.id.tareaBtnEditarDatos);
-        ToggleButton btnEstado = (ToggleButton) view.findViewById(R.id.tareaBtnTrabajando);
+        final ToggleButton btnEstado = (ToggleButton) view.findViewById(R.id.tareaBtnTrabajando);
 
         nombre.setText(cursor.getString(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.TAREA)));
         Integer horasAsigandas = cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS));
@@ -83,6 +86,40 @@ public class TareaCursorAdapter extends CursorAdapter {
             }
         });
 
+        btnEstado.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
+        btnEstado.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Integer idTarea = (Integer) v.getTag();
+                /**Dejar la marca de tiempo para empezar a trabajar.*/
+                if (startTime == 0){
+                    taskId = idTarea;
+                    startTime = System.currentTimeMillis();
+                    //tareaId = myDao
+                }
+                else{
+                    if (taskId==idTarea){
+                        final long auxTime = startTime;
+                        Thread backGroundUpdate = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //Log.d("LAB05-MAIN", "finalizar tarea : --- " + idTarea);
+                                myDao.updateTiempoFinTarea(idTarea, auxTime);
+                                handlerRefresh.sendEmptyMessage(1);
+                            }
+                        });
+                        backGroundUpdate.start();
+                        startTime=0;
+                    }
+                    else{
+                        btnEstado.setChecked(Boolean.FALSE);
+                    }
+
+                }
+
+            }
+        });
+
         btnFinalizar.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
         btnFinalizar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +134,8 @@ public class TareaCursorAdapter extends CursorAdapter {
                     }
                 });
                 backGroundUpdate.start();
+                btnEstado.setChecked(Boolean.FALSE);
+                startTime=0;
             }
         });
     }

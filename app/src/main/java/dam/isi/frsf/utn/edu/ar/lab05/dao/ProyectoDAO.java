@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import java.util.List;
@@ -93,7 +94,7 @@ public class ProyectoDAO {
     }
 
     public void finalizar(Integer idTarea){
-        //Establecemos los campos-valores a actualizar
+        /**Establecemos los campos-valores a actualizar*/
         ContentValues valores = new ContentValues();
         valores.put(ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA,1);
         SQLiteDatabase mydb =dbHelper.getWritableDatabase();
@@ -101,10 +102,34 @@ public class ProyectoDAO {
     }
 
     public List<Tarea> listarDesviosPlanificacion(Boolean soloTerminadas,Integer desvioMaximoMinutos){
-        // retorna una lista de todas las tareas que tardaron más (en exceso) o menos (por defecto)
-        // que el tiempo planificado.
-        // si la bandera soloTerminadas es true, se busca en las tareas terminadas, sino en todas.
+        /** retorna una lista de todas las tareas que tardaron más (en exceso) o menos (por defecto)
+         * que el tiempo planificado.
+         * si la bandera soloTerminadas es true, se busca en las tareas terminadas, sino en todas.
+         */
         return null;
+    }
+
+    public long updateTiempoFinTarea(int id, long inicio){
+        try {
+            long auxtime;
+            /**Definimos la sentencia where para guardar los Minutos Trabajados**/
+            String where = ProyectoDBMetadata.TablaTareasMetadata._ID + "=" + String.valueOf(id);
+            /**Recuperamos el valor almacenado de Minutos Trabajados**/
+            String[] campos = new String[] {ProyectoDBMetadata.TablaTareasMetadata.MINUTOS_TRABAJADOS};
+            String[] args = new String[] {String.valueOf(id)};
+            Cursor c = db.query(ProyectoDBMetadata.TABLA_TAREAS,campos,ProyectoDBMetadata.TablaTareasMetadata._ID + "= ?",args,null,null,null);
+            int auxTiempoTrabajado = 0;
+            if (c.moveToFirst()){
+                auxTiempoTrabajado = c.getInt(0);
+            }
+            /**Calculamos el valor y lo almacenamos**/
+            ContentValues newTime = new ContentValues();
+            auxtime = (((System.currentTimeMillis() - inicio) / 1000)/5) + auxTiempoTrabajado;
+            newTime.put(ProyectoDBMetadata.TablaTareasMetadata.MINUTOS_TRABAJADOS,auxtime);
+            return db.update(ProyectoDBMetadata.TABLA_TAREAS,newTime,where,null);
+        }catch (SQLiteException ex){
+            return -1;
+        }
     }
 
 
