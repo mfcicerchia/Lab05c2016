@@ -7,9 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Prioridad;
+import dam.isi.frsf.utn.edu.ar.lab05.modelo.Proyecto;
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Tarea;
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Usuario;
 
@@ -74,7 +76,22 @@ public class ProyectoDAO {
     }
 
     public void nuevaTarea(Tarea t){
-
+        /**Creamos un Content Values que utilizaremos para añadir la tarea a la base de datos*/
+        ContentValues nuevaTarea = new ContentValues();
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata._ID,t.getId());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.TAREA,t.getDescripcion());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS,t.getHorasEstimadas());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.MINUTOS_TRABAJADOS,t.getMinutosTrabajados());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.PRIORIDAD, t.getPrioridad().getId());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.RESPONSABLE,t.getResponsable().getId());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.PROYECTO,t.getProyecto().getId());
+        nuevaTarea.put(ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA,t.getFinalizada());
+        /**Añadimos la tarea a la base de datos*/
+        try {
+            db.insert(ProyectoDBMetadata.TABLA_TAREAS, null, nuevaTarea);
+        } catch (SQLiteException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public void actualizarTarea(Tarea t){
@@ -86,11 +103,33 @@ public class ProyectoDAO {
     }
 
     public List<Prioridad> listarPrioridades(){
-        return null;
+        String[] campos = new String[] {ProyectoDBMetadata.TablaPrioridadMetadata.PRIORIDAD};
+        Cursor c = db.query(ProyectoDBMetadata.TABLA_PRIORIDAD, campos, null, null, null, null, null);
+        Prioridad prioridad;
+        int prioridadID = 1;
+        List<Prioridad> lista = new ArrayList<>();
+        if (c.moveToFirst()){
+            do {
+                prioridad = new Prioridad(prioridadID,c.getString(0));
+                lista.add(prioridad);
+                prioridadID++;
+            }while (c.moveToNext());
+        }
+        return lista;
     }
 
     public List<Usuario> listarUsuarios(){
-        return null;
+        List<Usuario> listaUsuarios = new ArrayList<>();
+        Usuario usuario;
+        String[] campos = new String[] {ProyectoDBMetadata.TablaUsuariosMetadata._ID,ProyectoDBMetadata.TablaUsuariosMetadata.USUARIO,ProyectoDBMetadata.TablaUsuariosMetadata.MAIL};
+        Cursor c = db.query(ProyectoDBMetadata.TABLA_USUARIOS, campos, null, null, null, null, null);
+        if (c.moveToFirst()){
+            do {
+                usuario = new Usuario(c.getInt(0),c.getString(1),c.getString(2));
+                listaUsuarios.add(usuario);
+            }while (c.moveToNext());
+        }
+        return listaUsuarios;
     }
 
     public void finalizar(Integer idTarea){
@@ -131,6 +170,29 @@ public class ProyectoDAO {
             return -1;
         }
     }
+
+    public int getLastTareaId(){
+        String[] campos = new String[] {ProyectoDBMetadata.TablaTareasMetadata._ID};
+        Cursor c = db.query(ProyectoDBMetadata.TABLA_TAREAS, campos, null, null, null, null, null);
+        if (c.moveToLast())
+            return c.getInt(0);
+        return -1;
+    }
+
+    public Cursor getCursorUsuarios(){
+        Cursor c = db.query(
+                ProyectoDBMetadata.TABLA_USUARIOS,
+                new String[]{"rowid _id", /**Se hace la busqueda de esta forma debido a que SimpleCursorAdapter espera la columna clave como _id y en la tabla esta definida como _ID**/
+                ProyectoDBMetadata.TablaUsuariosMetadata.USUARIO,
+                ProyectoDBMetadata.TablaUsuariosMetadata.MAIL},
+                null,
+                null,
+                null,
+                null,
+                null);
+        return c;
+    }
+
 
 
 }

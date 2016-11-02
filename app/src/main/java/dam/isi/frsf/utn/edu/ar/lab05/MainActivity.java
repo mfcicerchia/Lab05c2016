@@ -35,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intActAlta= new Intent(MainActivity.this,AltaTareaActivity.class);
-                intActAlta.putExtra("ID_TAREA", 0);
+                Log.d("LastIndex--->",String.valueOf(proyectoDAO.getLastTareaId()));
+                intActAlta.putExtra("ID_TAREA", proyectoDAO.getLastTareaId()+1);
                 startActivity(intActAlta);
             }
         });
