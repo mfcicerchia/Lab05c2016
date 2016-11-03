@@ -95,7 +95,15 @@ public class ProyectoDAO {
     }
 
     public void actualizarTarea(Tarea t){
+        /**Establecemos los valores**/
+        ContentValues valores = new ContentValues();
+        valores.put(ProyectoDBMetadata.TablaTareasMetadata.TAREA,t.getDescripcion());
+        valores.put(ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS, t.getHorasEstimadas());
+        valores.put(ProyectoDBMetadata.TablaTareasMetadata.PRIORIDAD,t.getPrioridad().getId());
+        valores.put(ProyectoDBMetadata.TablaTareasMetadata.RESPONSABLE, t.getResponsable().getId());
 
+        /**Actualizamos la Base de Datos**/
+        db.update(ProyectoDBMetadata.TABLA_TAREAS, valores, ProyectoDBMetadata.TablaTareasMetadata._ID + "=" + t.getId(), null);
     }
 
     public void borrarTarea(Tarea t){

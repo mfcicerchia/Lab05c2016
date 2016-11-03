@@ -9,13 +9,18 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Switch;
 
 
 import dam.isi.frsf.utn.edu.ar.lab05.dao.ProyectoDAO;
+import dam.isi.frsf.utn.edu.ar.lab05.modelo.Tarea;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -37,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intActAlta= new Intent(MainActivity.this,AltaTareaActivity.class);
                 Log.d("LastIndex--->",String.valueOf(proyectoDAO.getLastTareaId()));
                 intActAlta.putExtra("ID_TAREA", proyectoDAO.getLastTareaId()+1);
+                intActAlta.putExtra("esEdicion",Boolean.FALSE);
                 startActivity(intActAlta);
             }
         });
@@ -91,4 +97,5 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }

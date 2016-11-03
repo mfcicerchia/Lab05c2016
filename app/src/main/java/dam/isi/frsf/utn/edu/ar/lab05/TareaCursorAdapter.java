@@ -61,6 +61,7 @@ public class TareaCursorAdapter extends CursorAdapter {
         final Button btnFinalizar = (Button) view.findViewById(R.id.tareaBtnFinalizada);
         final Button btnEditar = (Button) view.findViewById(R.id.tareaBtnEditarDatos);
         final ToggleButton btnEstado = (ToggleButton) view.findViewById(R.id.tareaBtnTrabajando);
+        final Button btnEliminar = (Button) view.findViewById(R.id.btnEliminar);
 
         nombre.setText(cursor.getString(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.TAREA)));
         Integer horasAsigandas = cursor.getInt(cursor.getColumnIndex(ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS));
@@ -81,6 +82,7 @@ public class TareaCursorAdapter extends CursorAdapter {
                 final Integer idTarea = (Integer) view.getTag();
                 Intent intEditarAct = new Intent(contexto, AltaTareaActivity.class);
                 intEditarAct.putExtra("ID_TAREA", idTarea);
+                intEditarAct.putExtra("esEdicion",Boolean.TRUE);
                 context.startActivity(intEditarAct);
 
             }
@@ -136,6 +138,14 @@ public class TareaCursorAdapter extends CursorAdapter {
                 backGroundUpdate.start();
                 btnEstado.setChecked(Boolean.FALSE);
                 startTime=0;
+            }
+        });
+
+        btnEliminar.setTag(cursor.getInt(cursor.getColumnIndex("_id")));
+        btnEliminar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
     }
