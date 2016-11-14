@@ -20,6 +20,7 @@ import android.widget.ToggleButton;
 
 import dam.isi.frsf.utn.edu.ar.lab05.dao.ProyectoDAO;
 import dam.isi.frsf.utn.edu.ar.lab05.dao.ProyectoDBMetadata;
+import dam.isi.frsf.utn.edu.ar.lab05.modelo.Tarea;
 
 /**
  * Created by mdominguez on 06/10/16.
@@ -145,7 +146,11 @@ public class TareaCursorAdapter extends CursorAdapter {
         btnEliminar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                final Integer idTarea = (Integer) v.getTag();
+                Tarea tarea = new Tarea();
+                tarea.setId(idTarea);
+                myDao.borrarTarea(tarea);
+                handlerRefresh.sendEmptyMessage(1);
             }
         });
     }

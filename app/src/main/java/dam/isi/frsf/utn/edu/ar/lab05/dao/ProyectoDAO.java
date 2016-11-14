@@ -107,7 +107,8 @@ public class ProyectoDAO {
     }
 
     public void borrarTarea(Tarea t){
-
+        /**Borramos la tarea**/
+        db.delete(ProyectoDBMetadata.TABLA_TAREAS, ProyectoDBMetadata.TablaTareasMetadata._ID + " = " + t.getId().toString(),null);
     }
 
     public List<Prioridad> listarPrioridades(){
