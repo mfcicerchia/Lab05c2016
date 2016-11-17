@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Prioridad;
-import dam.isi.frsf.utn.edu.ar.lab05.modelo.Proyecto;
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Tarea;
 import dam.isi.frsf.utn.edu.ar.lab05.modelo.Usuario;
+
+import static java.lang.Math.abs;
+
 
 /**
  * Created by mdominguez on 06/10/16.
@@ -149,12 +151,38 @@ public class ProyectoDAO {
         mydb.update(ProyectoDBMetadata.TABLA_TAREAS, valores, "_id=?", new String[]{idTarea.toString()});
     }
 
-    public List<Tarea> listarDesviosPlanificacion(Boolean soloTerminadas,Integer desvioMaximoMinutos){
+    public ArrayList<Tarea> listarDesviosPlanificacion(Boolean soloTerminadas, Integer desvioMaximoMinutos){
         /** retorna una lista de todas las tareas que tardaron más (en exceso) o menos (por defecto)
          * que el tiempo planificado.
          * si la bandera soloTerminadas es true, se busca en las tareas terminadas, sino en todas.
          */
-        return null;
+        ArrayList<Tarea> tareas = new ArrayList<Tarea>();
+        String where;
+        if (soloTerminadas){
+            where = ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA + "= 1";
+        }
+        else{
+            where = ProyectoDBMetadata.TablaTareasMetadata.FINALIZADA + "= 0";
+        }
+        String[] campos = new String[] {
+                ProyectoDBMetadata.TablaTareasMetadata._ID,
+                ProyectoDBMetadata.TablaTareasMetadata.TAREA,
+                ProyectoDBMetadata.TablaTareasMetadata.HORAS_PLANIFICADAS,
+                ProyectoDBMetadata.TablaTareasMetadata.MINUTOS_TRABAJADOS};
+        Cursor c = db.query(ProyectoDBMetadata.TABLA_TAREAS, campos ,where,null,null,null,null);
+        if (c.moveToFirst()){
+            do {
+                Tarea tarea = new Tarea();
+                tarea.setId(c.getInt(0));
+                tarea.setDescripcion(c.getString(1));
+                tarea.setHorasEstimadas(c.getInt(2));
+                tarea.setMinutosTrabajados(c.getInt(3));
+                if (abs((tarea.getHorasEstimadas()*60)-tarea.getMinutosTrabajados())<desvioMaximoMinutos){
+                    tareas.add(tarea);
+                }
+            }while (c.moveToNext());
+        }
+        return tareas;
     }
 
     public long updateTiempoFinTarea(int id, long inicio){

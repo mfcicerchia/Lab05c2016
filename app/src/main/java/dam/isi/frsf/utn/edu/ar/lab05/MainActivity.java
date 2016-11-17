@@ -94,6 +94,10 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.action_settings) {
             return true;
         }
+        if (id == R.id.action_searhc){
+            Intent i = new Intent(this, SearchActivity.class);
+            startActivity(i);
+        }
 
         return super.onOptionsItemSelected(item);
     }
