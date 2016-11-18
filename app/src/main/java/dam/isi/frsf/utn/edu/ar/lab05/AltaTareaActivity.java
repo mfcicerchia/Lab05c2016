@@ -1,11 +1,21 @@
 package dam.isi.frsf.utn.edu.ar.lab05;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.view.ContextThemeWrapper;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +27,9 @@ import android.widget.SeekBar;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +55,7 @@ public class AltaTareaActivity extends AppCompatActivity {
     Boolean esEdicion, tareaFinalizada;
     Usuario usuario;
     int id;
+    RestClient restClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +64,8 @@ public class AltaTareaActivity extends AppCompatActivity {
         myDao = new ProyectoDAO(AltaTareaActivity.this);
         myDao.open();
         idTarea = getIntent().getExtras().getInt("ID_TAREA");
+
+        restClient = new RestClient();
 
         descripcion = (EditText)findViewById(R.id.etDescripcion);
         horasEstimadas = (EditText)findViewById(R.id.etHorasEstimadas);
@@ -99,10 +115,6 @@ public class AltaTareaActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long idSpnr) {
                 usuario = (Usuario) parent.getItemAtPosition(position);
-                if (usuario.getId()==0){
-                    usuario.setId(id+1);
-                    myDao.nuevoUsuario(usuario);
-                }
             }
 
             @Override
@@ -178,6 +190,27 @@ public class AltaTareaActivity extends AppCompatActivity {
                             break;
                         }
                     }*/
+                    if (usuario.getId()==0){
+                        /**Lo añadimos a la base local**/
+                        usuario.setId(id+1);
+                        myDao.nuevoUsuario(usuario);
+                        /**Lo añadimos a la base remota**/
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    JSONObject nuevoObjeto = new JSONObject();
+                                    nuevoObjeto.put("id",String.valueOf(usuario.getId()));
+                                    nuevoObjeto.put("nombre",usuario.getNombre());
+                                    nuevoObjeto.put("correoElectronico",usuario.getCorreoElectronico());
+                                    restClient.crear(nuevoObjeto,"usuarios");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }).start();
+
+                    }
                     if (esEdicion){
                         Tarea tarea = new Tarea(
                                 idTarea,
@@ -219,6 +252,6 @@ public class AltaTareaActivity extends AppCompatActivity {
                 finish();
             }
         });
-
     }
+
 }

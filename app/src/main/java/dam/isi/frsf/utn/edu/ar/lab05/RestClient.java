@@ -7,10 +7,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -56,8 +58,33 @@ public class RestClient {
         JSONArray resultado = null;
         return resultado;
     }
-    public void crear(JSONObject objeto,String path) {
 
+    public void crear(JSONObject objeto,String path) {
+        HttpURLConnection urlConnection=null;
+        try {
+            String str = objeto.toString();
+            byte[] data=str.getBytes();
+
+            URL url = new URL("http://"+IP_SERVER+":"+PORT_SERVER+"/"+path);
+            urlConnection = (HttpURLConnection) url.openConnection();
+            urlConnection.setDoOutput(true);
+            urlConnection.setRequestMethod("POST");
+            urlConnection.setFixedLengthStreamingMode(data.length);
+            urlConnection.setRequestProperty("Content-Type","application/json");
+
+            DataOutputStream printout = new DataOutputStream(urlConnection.getOutputStream());
+            printout.write(data);
+            printout.flush();
+            printout.close();
+            Log.d("TEST-ARR","FIN!!! "+urlConnection.getResponseMessage());
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            urlConnection.disconnect();
+        }
     }
     public void actualizar(JSONObject objeto,String path) {
 
