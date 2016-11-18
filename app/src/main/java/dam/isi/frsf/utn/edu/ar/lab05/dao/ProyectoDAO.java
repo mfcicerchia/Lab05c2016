@@ -230,6 +230,20 @@ public class ProyectoDAO {
         return c;
     }
 
+    public void nuevoUsuario(Usuario u){
+        /**Creamos un Content Values que utilizaremos para añadir al usuario a la base de datos*/
+        ContentValues nuevoUser = new ContentValues();
+        nuevoUser.put(ProyectoDBMetadata.TablaUsuariosMetadata._ID,u.getId());
+        nuevoUser.put(ProyectoDBMetadata.TablaUsuariosMetadata.USUARIO,u.getNombre());
+        nuevoUser.put(ProyectoDBMetadata.TablaUsuariosMetadata.MAIL,u.getCorreoElectronico());
+        /**Añadimos la tarea a la base de datos*/
+        try {
+            db.insert(ProyectoDBMetadata.TABLA_USUARIOS, null, nuevoUser);
+        } catch (SQLiteException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
 
 }

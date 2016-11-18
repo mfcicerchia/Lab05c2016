@@ -57,10 +57,13 @@ public class RestClient {
         return resultado;
     }
     public void crear(JSONObject objeto,String path) {
+
     }
     public void actualizar(JSONObject objeto,String path) {
+
     }
 
     public void borrar(Integer id,String path) {
+
     }
 }

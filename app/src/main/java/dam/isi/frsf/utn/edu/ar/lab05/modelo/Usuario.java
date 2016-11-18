@@ -42,4 +42,9 @@ public class Usuario {
     public void setCorreoElectronico(String correoElectronico) {
         this.correoElectronico = correoElectronico;
     }
+
+    @Override
+    public String toString() {
+        return this.nombre;
+    }
 }
