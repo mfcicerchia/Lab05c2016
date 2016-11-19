@@ -3,6 +3,8 @@ package dam.isi.frsf.utn.edu.ar.lab05;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -28,6 +30,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -123,30 +126,6 @@ public class AltaTareaActivity extends AppCompatActivity {
             }
         });
 
-        /**Lab5**/
-        /*
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                this,
-                android.R.layout.simple_list_item_1,
-                myDao.getCursorUsuarios(),
-                new String[] {ProyectoDBMetadata.TablaUsuariosMetadata.USUARIO},
-                new int[] {android.R.id.text1},
-                0
-        );
-        responsable = (Spinner)findViewById(R.id.spnrResponsable);
-        responsable.setAdapter(adapter);
-        responsable.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                userID = ((Cursor) parent.getItemAtPosition(position)).getInt(0);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        */
         /**********************/
 
         btnGuardar = (Button)findViewById(R.id.btnGuardar);
@@ -182,14 +161,11 @@ public class AltaTareaActivity extends AppCompatActivity {
         btnGuardar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                /**Nos fijamos si el usuario esta en la lista de contactos, de lo contrario lo agregamos**/
+                if (!existeContacto(usuario.getNombre())){
+                    nuevoContacto(usuario);
+                }
                 if (prioridad.getProgress()>0) {
-                    /*Usuario usuario = new Usuario();
-                    for (Usuario user : listaUsuario){
-                        if (user.getId()==userID){
-                            usuario = user;
-                            break;
-                        }
-                    }*/
                     if (usuario.getId()==0){
                         /**Lo añadimos a la base local**/
                         usuario.setId(id+1);
@@ -254,4 +230,42 @@ public class AltaTareaActivity extends AppCompatActivity {
         });
     }
 
+    public boolean existeContacto(String nombreBuscado) {
+        boolean existe = Boolean.FALSE;
+        Uri uri = ContactsContract.Contacts.CONTENT_URI;
+        String sortOrder = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
+
+        Cursor c = this.getContentResolver().query(uri, null, ContactsContract.Contacts.DISPLAY_NAME + " LIKE '" + nombreBuscado + "%'", null, sortOrder);
+
+        if (c.moveToFirst()){
+            do {
+                if (c.getString(c.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)).equals(nombreBuscado)) {
+                    existe = Boolean.TRUE;
+                }
+            }while (c.moveToNext());
+        }
+
+        return existe;
+    }
+
+    public void nuevoContacto(Usuario u){
+        String accountType =null;
+        String accountName =null;
+        ContentValues values = new ContentValues();
+        values.put(ContactsContract.RawContacts.ACCOUNT_TYPE, accountType);
+        values.put(ContactsContract.RawContacts.ACCOUNT_NAME, accountName);
+        Uri rawContactUri = getContentResolver().insert(ContactsContract.RawContacts.CONTENT_URI, values);
+        long rawContactId = ContentUris.parseId(rawContactUri);
+        values.clear();
+        values.put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId);
+        values.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
+        values.put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, u.getNombre());
+        getContentResolver().insert(ContactsContract.Data.CONTENT_URI, values);
+
+        values.clear();
+        values.put(ContactsContract.Data.RAW_CONTACT_ID, rawContactId);
+        values.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE);
+        values.put(ContactsContract.CommonDataKinds.Email.DATA, u.getCorreoElectronico());
+        getContentResolver().insert(ContactsContract.Data.CONTENT_URI, values);
+    }
 }

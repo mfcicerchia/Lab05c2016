@@ -118,8 +118,10 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean askForContactPermission(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-                flagPermisoPedido = Boolean.FALSE;
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
+                flagPermisoPedido = false;
                 if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                         Manifest.permission.READ_CONTACTS)) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(MainActivity.this,R.style.myDialog));
@@ -130,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
                         @TargetApi(Build.VERSION_CODES.M)
                         @Override
                         public void onDismiss(DialogInterface dialog) {
-                            //flagPermisoPedido=true;
+
                             requestPermissions(
                                     new String[]
                                             {Manifest.permission.READ_CONTACTS,Manifest.permission.WRITE_CONTACTS,Manifest.permission.GET_ACCOUNTS}
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                     builder.show();
                 } else {
-                    //flagPermisoPedido=true;
+
                     ActivityCompat.requestPermissions(MainActivity.this,
                             new String[]
                                     {Manifest.permission.READ_CONTACTS,Manifest.permission.WRITE_CONTACTS,Manifest.permission.GET_ACCOUNTS}
@@ -147,14 +149,18 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
+            else{
+                flagPermisoPedido=true;
+            }
         }
+
         if(flagPermisoPedido) {
-            return Boolean.TRUE;
+            return true;
         }
         else{
-            return Boolean.FALSE;
+            return false;
         }
-        //if(!flagPermisoPedido) hacerAlgoQueRequeriaPermisosPeligrosos();
+
     }
 
     @Override
@@ -163,10 +169,10 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode){
             case PERMISSION_REQUEST_CONTACT:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                    flagPermisoPedido = Boolean.TRUE;
+                    flagPermisoPedido = true;
                 }
                 else{
-                    flagPermisoPedido = Boolean.FALSE;
+                    flagPermisoPedido = false;
                 }
                 break;
         }
